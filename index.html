@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MT PRO GYM - Gestión de Gimnasio</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --bg:#03111c;
+  --bg2:#061d2d;
+  --card:#0d2a40;
+  --card2:#071f31;
+  --line:#0d6d8c;
+  --cyan:#08d8ff;
+  --cyan2:#00bfe8;
+  --text:#f5fbff;
+  --muted:#a9bfce;
+  --good:#31d28c;
+  --warn:#ffd166;
+  --bad:#ff4d6d;
+  --white:#fff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(8,216,255,.11), transparent 30%),
+    linear-gradient(135deg,#020b12,#041827 48%,#03111c);
+  color:var(--text);
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+header{
+  min-height:145px;
+  border-bottom:1px solid rgba(8,216,255,.38);
+  background:rgba(1,11,18,.88);
+  backdrop-filter:blur(10px);
+}
+.header-inner{
+  max-width:1650px;
+  margin:0 auto;
+  padding:18px 28px;
+  min-height:145px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+.logo-box{
+  width:136px;
+  height:104px;
+  border-radius:20px;
+  border:1px solid rgba(8,216,255,.3);
+  background:linear-gradient(145deg,#09243a,#071725);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  box-shadow:0 16px 40px rgba(0,0,0,.38);
+}
+.logo-box .bear{
+  font-size:52px;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.4));
+}
+.brand{min-width:280px}
+.brand h1{
+  margin:0;
+  font-size:42px;
+  line-height:1;
+  font-weight:900;
+  font-style:italic;
+  letter-spacing:.4px;
+}
+.brand .mt{color:#fff}
+.brand .pro{color:var(--cyan)}
+.brand .sub{
+  margin-top:9px;
+  color:var(--muted);
+  font-size:15px;
+}
+.top-nav{
+  margin-left:auto;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(135px,1fr));
+  gap:9px;
+  width:min(770px,100%);
+}
+.nav-btn{
+  border:1px solid rgba(8,216,255,.28);
+  background:rgba(11,43,65,.85);
+  color:#dcecf7;
+  min-height:50px;
+  border-radius:13px;
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.3px;
+  transition:.15s ease;
+}
+.nav-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(8,216,255,.75);
+  color:#fff;
+}
+.nav-btn.active{
+  background:linear-gradient(180deg,#18dfff,#00bfe5);
+  color:#00121e;
+  border-color:#40e7ff;
+  box-shadow:0 9px 24px rgba(8,216,255,.18);
+}
+main{
+  max-width:1650px;
+  margin:0 auto;
+  padding:28px;
+}
+.view{display:none}
+.view.active{display:block}
+.page-title{
+  text-align:center;
+  color:var(--cyan);
+  font-size:27px;
+  margin:2px 0 22px;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+}
+.card{
+  background:linear-gradient(180deg,rgba(15,45,67,.95),rgba(7,28,44,.96));
+  border:1px solid rgba(8,216,255,.25);
+  border-radius:20px;
+  padding:20px;
+  box-shadow:0 16px 38px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.035);
+}
+.card h3{
+  margin:0 0 15px;
+  color:var(--cyan);
+  text-transform:uppercase;
+  letter-spacing:.45px;
+  font-size:18px;
+}
+.grid-2{
+  display:grid;
+  grid-template-columns:minmax(330px,.8fr) minmax(0,1.7fr);
+  gap:18px;
+  align-items:start;
+}
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.form-grid .full{grid-column:1/-1}
+label{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  color:#d8e7f2;
+  font-size:12px;
+  font-weight:800;
+}
+input,select,textarea{
+  width:100%;
+  min-width:0;
+  border:1px solid rgba(255,255,255,.14);
+  background:#fff;
+  color:#111;
+  border-radius:12px;
+  padding:11px 12px;
+  outline:none;
+}
+textarea{
+  min-height:90px;
+  resize:vertical;
+}
+input:focus,select:focus,textarea:focus{
+  box-shadow:0 0 0 3px rgba(8,216,255,.17);
+  border-color:var(--cyan);
+}
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+  margin-top:15px;
+}
+.btn{
+  border:0;
+  border-radius:12px;
+  padding:11px 15px;
+  font-weight:900;
+}
+.btn.primary{
+  background:linear-gradient(180deg,#18dfff,#00bde4);
+  color:#00121d;
+}
+.btn.secondary{
+  background:#193e58;
+  color:#fff;
+  border:1px solid rgba(8,216,255,.22);
+}
+.btn.danger{
+  background:#552235;
+  color:#fff;
+  border:1px solid rgba(255,77,109,.35);
+}
+.btn.small{
+  padding:7px 9px;
+  font-size:11px;
+  border-radius:9px;
+}
+.toolbar{
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) 220px 220px;
+  gap:10px;
+  margin-bottom:14px;
+}
+.table-wrap{
+  overflow:auto;
+  max-height:590px;
+  border:1px solid rgba(8,216,255,.18);
+  border-radius:15px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+th,td{
+  padding:10px 9px;
+  border-bottom:1px solid rgba(8,216,255,.10);
+  white-space:nowrap;
+  text-align:center;
+}
+th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#031421;
+  color:var(--cyan);
+  text-transform:uppercase;
+  letter-spacing:.35px;
+}
+td:first-child,th:first-child{
+  text-align:left;
+}
+tbody tr:hover{background:rgba(8,216,255,.065)}
+.status{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.45;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:999px;
+  padding:5px 8px;
+  font-size:10px;
+  font-weight:900;
+}
+.badge.good{
+  color:#66efb1;
+  border:1px solid rgba(49,210,140,.32);
+  background:rgba(49,210,140,.11);
+}
+.badge.warn{
+  color:#ffe28e;
+  border:1px solid rgba(255,209,102,.34);
+  background:rgba(255,209,102,.11);
+}
+.badge.bad{
+  color:#ff8aa0;
+  border:1px solid rgba(255,77,109,.32);
+  background:rgba(255,77,109,.12);
+}
+.metric-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+  margin-bottom:18px;
+}
+.metric{
+  min-height:130px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.metric .k{
+  color:#c8d9e5;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+}
+.metric .v{
+  margin-top:10px;
+  font-size:36px;
+  font-weight:900;
+  color:#fff;
+}
+.metric .n{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:7px;
+}
+.chart-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px;
+}
+.chart-card canvas{
+  width:100%!important;
+  height:330px!important;
+}
+.routine-layout{
+  display:grid;
+  grid-template-columns:minmax(340px,.8fr) minmax(0,1.2fr);
+  gap:18px;
+}
+.exercise-row{
+  display:grid;
+  grid-template-columns:1.2fr .55fr .55fr .55fr auto;
+  gap:8px;
+  align-items:end;
+  margin-top:9px;
+}
+.exercise-row button{height:42px}
+.routine-preview{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+.routine-card{
+  border:1px solid rgba(8,216,255,.18);
+  border-radius:14px;
+  background:rgba(2,17,28,.34);
+  padding:14px;
+}
+.routine-card h4{
+  margin:0 0 6px;
+  color:#fff;
+}
+.routine-card .meta{
+  color:var(--muted);
+  font-size:11px;
+  margin-bottom:10px;
+}
+.routine-card ul{
+  margin:0;
+  padding-left:18px;
+  color:#d8e7f2;
+  line-height:1.6;
+  font-size:12px;
+}
+.month-controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:end;
+  margin-bottom:16px;
+}
+.month-controls label{min-width:220px}
+.footer{
+  max-width:1650px;
+  margin:0 auto;
+  padding:0 28px 24px;
+  color:#d8e7f2;
+  font-weight:800;
+}
+.empty{
+  padding:24px;
+  text-align:center;
+  color:var(--muted);
+  border:1px dashed rgba(8,216,255,.25);
+  border-radius:14px;
+}
+@media(max-width:1100px){
+  .header-inner{flex-wrap:wrap}
+  .top-nav{margin-left:0;width:100%}
+  .grid-2,.routine-layout,.chart-grid{grid-template-columns:1fr}
+  .metric-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:700px){
+  .header-inner,main,.footer{padding-left:14px;padding-right:14px}
+  .logo-box{width:88px;height:78px}
+  .logo-box .bear{font-size:38px}
+  .brand h1{font-size:28px}
+  .top-nav{grid-template-columns:1fr 1fr}
+  .nav-btn{font-size:10px}
+  .form-grid,.toolbar,.metric-grid,.routine-preview{grid-template-columns:1fr}
+  .exercise-row{grid-template-columns:1fr 1fr}
+  .exercise-row .wide{grid-column:1/-1}
+}
+@media print{
+  header,.top-nav,.no-print,.footer{display:none!important}
+  body{background:#fff;color:#111}
+  main{max-width:none;padding:0}
+  .card{box-shadow:none;border:1px solid #bbb;background:#fff}
+  .view{display:none!important}
+  .view.active{display:block!important}
+  table,th,td{color:#111}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="header-inner">
+    <div class="logo-box" aria-label="MT PRO GYM">
+      <div class="bear">🐻</div>
+    </div>
+    <div class="brand">
+      <h1><span class="mt">MT</span> <span class="pro">PRO</span> GYM</h1>
+      <div class="sub">Gestión de alumnos, pagos, rutinas y resumen mensual.</div>
+    </div>
+
+    <nav class="top-nav">
+      <button class="nav-btn active" data-view="alumnos" onclick="showView('alumnos')">ALUMNOS</button>
+      <button class="nav-btn" data-view="pagos" onclick="showView('pagos')">PAGOS</button>
+      <button class="nav-btn" data-view="rutinas" onclick="showView('rutinas')">RUTINAS</button>
+      <button class="nav-btn" data-view="resumen" onclick="showView('resumen')">RESUMEN MENSUAL</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ===================== ALUMNOS ===================== -->
+  <section id="view-alumnos" class="view active">
+    <h2 class="page-title">ALUMNOS</h2>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Alta / edición de alumno</h3>
+        <input type="hidden" id="studentId">
+        <div class="form-grid">
+          <label>Nombre y apellido
+            <input id="studentName" type="text" placeholder="Ej: Juan Pérez">
+          </label>
+          <label>DNI
+            <input id="studentDni" type="text" placeholder="Ej: 40123456">
+          </label>
+          <label>Teléfono
+            <input id="studentPhone" type="text" placeholder="Ej: 2974...">
+          </label>
+          <label>Fecha de nacimiento
+            <input id="studentBirth" type="date">
+          </label>
+          <label>Fecha de ingreso
+            <input id="studentJoin" type="date">
+          </label>
+          <label>Plan
+            <select id="studentPlan">
+              <option value="Musculación">Musculación</option>
+              <option value="Funcional">Funcional</option>
+              <option value="Libre">Libre</option>
+              <option value="Personalizado">Personalizado</option>
+            </select>
+          </label>
+          <label>Cuota mensual
+            <input id="studentFee" type="number" min="0" step="100" placeholder="0">
+          </label>
+          <label>Estado
+            <select id="studentStatus">
+              <option value="ACTIVO">ACTIVO</option>
+              <option value="PAUSADO">PAUSADO</option>
+              <option value="BAJA">BAJA</option>
+            </select>
+          </label>
+          <label class="full">Observaciones
+            <textarea id="studentNotes" placeholder="Objetivo, restricciones, observaciones generales..."></textarea>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn primary" onclick="saveStudent()">GUARDAR ALUMNO</button>
+          <button class="btn secondary" onclick="resetStudentForm()">LIMPIAR</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Listado de alumnos</h3>
+        <div class="toolbar">
+          <input id="studentSearch" type="text" placeholder="Buscar alumno..." oninput="renderStudents()">
+          <select id="studentStatusFilter" onchange="renderStudents()">
+            <option value="TODOS">TODOS LOS ESTADOS</option>
+            <option value="ACTIVO">ACTIVOS</option>
+            <option value="PAUSADO">PAUSADOS</option>
+            <option value="BAJA">BAJAS</option>
+          </select>
+          <button class="btn secondary" onclick="exportStudentsCSV()">EXPORTAR CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>DNI</th>
+                <th>Teléfono</th>
+                <th>Plan</th>
+                <th>Cuota</th>
+                <th>Ingreso</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="studentsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGOS ===================== -->
+  <section id="view-pagos" class="view">
+    <h2 class="page-title">PAGOS</h2>
+
+    <div class="metric-grid">
+      <div class="card metric">
+        <div class="k">Cobrado este mes</div>
+        <div class="v" id="metricPaid">$0</div>
+        <div class="n">Pagos registrados en el mes seleccionado</div>
+      </div>
+      <div class="card metric">
+        <div class="k">Alumnos al día</div>
+        <div class="v" id="metricUpToDate">0</div>
+        <div class="n">Activos con pago del mes</div>
+      </div>
+      <div class="card metric">
+        <div class="k">Pendientes</div>
+        <div class="v" id="metricPending">0</div>
+        <div class="n">Activos sin pago del mes</div>
+      </div>
+      <div class="card metric">
+        <div class="k">Morosidad estimada</div>
+        <div class="v" id="metricDebt">$0</div>
+        <div class="n">Cuotas mensuales pendientes</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Registrar pago</h3>
+        <div class="form-grid">
+          <label class="full">Alumno
+            <select id="paymentStudent"></select>
+          </label>
+          <label>Mes correspondiente
+            <input id="paymentMonth" type="month">
+          </label>
+          <label>Fecha de pago
+            <input id="paymentDate" type="date">
+          </label>
+          <label>Monto
+            <input id="paymentAmount" type="number" min="0" step="100">
+          </label>
+          <label>Medio de pago
+            <select id="paymentMethod">
+              <option value="Efectivo">Efectivo</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="Débito">Débito</option>
+              <option value="Crédito">Crédito</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
+          <label class="full">Observación
+            <input id="paymentNote" type="text" placeholder="Opcional">
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn primary" onclick="savePayment()">REGISTRAR PAGO</button>
+          <button class="btn secondary" onclick="resetPaymentForm()">LIMPIAR</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Historial de pagos</h3>
+        <div class="toolbar">
+          <input id="paymentSearch" type="text" placeholder="Buscar alumno..." oninput="renderPayments()">
+          <input id="paymentFilterMonth" type="month" onchange="renderPayments(); renderPaymentMetrics();">
+          <button class="btn secondary" onclick="exportPaymentsCSV()">EXPORTAR CSV</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Mes</th>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Medio</th>
+                <th>Observación</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RUTINAS ===================== -->
+  <section id="view-rutinas" class="view">
+    <h2 class="page-title">RUTINAS</h2>
+
+    <div class="routine-layout">
+      <div class="card">
+        <h3>Crear rutina</h3>
+        <input type="hidden" id="routineId">
+        <div class="form-grid">
+          <label class="full">Alumno
+            <select id="routineStudent"></select>
+          </label>
+          <label>Objetivo
+            <select id="routineGoal">
+              <option value="Hipertrofia">Hipertrofia</option>
+              <option value="Fuerza">Fuerza</option>
+              <option value="Descenso de peso">Descenso de peso</option>
+              <option value="Acondicionamiento">Acondicionamiento</option>
+              <option value="Recomposición">Recomposición</option>
+              <option value="General">General</option>
+            </select>
+          </label>
+          <label>Días por semana
+            <select id="routineDays">
+              <option value="2">2 días</option>
+              <option value="3" selected>3 días</option>
+              <option value="4">4 días</option>
+              <option value="5">5 días</option>
+              <option value="6">6 días</option>
+            </select>
+          </label>
+          <label>Fecha de inicio
+            <input id="routineStart" type="date">
+          </label>
+          <label>Duración (semanas)
+            <input id="routineWeeks" type="number" min="1" max="52" value="4">
+          </label>
+        </div>
+
+        <h3 style="margin-top:20px">Ejercicios</h3>
+        <div id="exerciseRows"></div>
+        <div class="actions">
+          <button class="btn secondary" onclick="addExerciseRow()">+ AGREGAR EJERCICIO</button>
+        </div>
+
+        <label style="margin-top:14px">Notas
+          <textarea id="routineNotes" placeholder="Indicaciones generales, progresiones, descansos..."></textarea>
+        </label>
+
+        <div class="actions">
+          <button class="btn primary" onclick="saveRoutine()">GUARDAR RUTINA</button>
+          <button class="btn secondary" onclick="resetRoutineForm()">LIMPIAR</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Rutinas asignadas</h3>
+        <div class="toolbar" style="grid-template-columns:1fr 220px">
+          <input id="routineSearch" type="text" placeholder="Buscar alumno..." oninput="renderRoutines()">
+          <select id="routineGoalFilter" onchange="renderRoutines()">
+            <option value="TODOS">TODOS LOS OBJETIVOS</option>
+            <option value="Hipertrofia">Hipertrofia</option>
+            <option value="Fuerza">Fuerza</option>
+            <option value="Descenso de peso">Descenso de peso</option>
+            <option value="Acondicionamiento">Acondicionamiento</option>
+            <option value="Recomposición">Recomposición</option>
+            <option value="General">General</option>
+          </select>
+        </div>
+        <div id="routineCards" class="routine-preview"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== RESUMEN ===================== -->
+  <section id="view-resumen" class="view">
+    <h2 class="page-title">RESUMEN MENSUAL</h2>
+
+    <div class="card no-print" style="margin-bottom:18px">
+      <div class="month-controls">
+        <label>Mes a analizar
+          <input id="summaryMonth" type="month" onchange="renderSummary()">
+        </label>
+        <button class="btn primary" onclick="renderSummary()">ACTUALIZAR</button>
+        <button class="btn secondary" onclick="window.print()">IMPRIMIR / PDF</button>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="card metric">
+        <div class="k">Alumnos activos</div>
+        <div class="v" id="sumActive">0</div>
+        <div class="n">Estado ACTIVO</div>
+      </div>
+      <div class="card metric">
+        <div class="k">Ingresos del mes</div>
+        <div class="v" id="sumIncome">$0</div>
+        <div class="n">Pagos registrados</div>
+      </div>
+      <div class="card metric">
+        <div class="k">Pendientes</div>
+        <div class="v" id="sumPending">0</div>
+        <div class="n">Activos sin pago</div>
+      </div>
+      <div class="card metric">
+        <div class="k">Altas del mes</div>
+        <div class="v" id="sumNew">0</div>
+        <div class="n">Nuevos alumnos</div>
+      </div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="card chart-card">
+        <h3>Pagos vs pendientes</h3>
+        <canvas id="chartPayments"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h3>Distribución por plan</h3>
+        <canvas id="chartPlans"></canvas>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>Detalle mensual</h3>
+      <div class="table-wrap" style="max-height:480px">
+        <table>
+          <thead>
+            <tr>
+              <th>Alumno</th>
+              <th>Plan</th>
+              <th>Cuota</th>
+              <th>Estado alumno</th>
+              <th>Pago del mes</th>
+              <th>Monto abonado</th>
+              <th>Última rutina</th>
+            </tr>
+          </thead>
+          <tbody id="summaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="footer">🏋️ MT PRO GYM - GESTIÓN PROFESIONAL</div>
+
+<script>
+const STORAGE = {
+  students:"mtpro_gym_students_v1",
+  payments:"mtpro_gym_payments_v1",
+  routines:"mtpro_gym_routines_v1"
+};
+
+let students = load(STORAGE.students, []);
+let payments = load(STORAGE.payments, []);
+let routines = load(STORAGE.routines, []);
+let charts = {};
+
+function load(key, fallback){
+  try{
+    const v = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(v) ? v : fallback;
+  }catch(e){ return fallback; }
+}
+function persist(){
+  localStorage.setItem(STORAGE.students, JSON.stringify(students));
+  localStorage.setItem(STORAGE.payments, JSON.stringify(payments));
+  localStorage.setItem(STORAGE.routines, JSON.stringify(routines));
+}
+function uid(prefix="id"){
+  return prefix+"_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);
+}
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
+function monthISO(){
+  return new Date().toISOString().slice(0,7);
+}
+function money(v){
+  return new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",maximumFractionDigits:0}).format(Number(v||0));
+}
+function esc(s){
+  return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+}
+function fmtDate(d){
+  if(!d) return "-";
+  const [y,m,day]=d.split("-");
+  return `${day}/${m}/${y}`;
+}
+function studentById(id){ return students.find(s=>s.id===id); }
+
+function showView(view){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("view-"+view).classList.add("active");
+  document.querySelector(`.nav-btn[data-view="${view}"]`).classList.add("active");
+  try{ localStorage.setItem("mtpro_gym_view",view); }catch(e){}
+  if(view==="pagos"){ populateStudentSelects(); renderPayments(); renderPaymentMetrics(); }
+  if(view==="rutinas"){ populateStudentSelects(); renderRoutines(); }
+  if(view==="resumen"){ renderSummary(); setTimeout(resizeCharts,60); }
+}
+
+function resizeCharts(){
+  Object.values(charts).forEach(c=>{try{c.resize()}catch(e){}});
+}
+
+/* ===================== ALUMNOS ===================== */
+function saveStudent(){
+  const id = document.getElementById("studentId").value;
+  const name = document.getElementById("studentName").value.trim();
+  if(!name){ alert("Ingresá el nombre del alumno."); return; }
+
+  const data = {
+    id:id||uid("stu"),
+    name,
+    dni:document.getElementById("studentDni").value.trim(),
+    phone:document.getElementById("studentPhone").value.trim(),
+    birth:document.getElementById("studentBirth").value,
+    join:document.getElementById("studentJoin").value || todayISO(),
+    plan:document.getElementById("studentPlan").value,
+    fee:Number(document.getElementById("studentFee").value||0),
+    status:document.getElementById("studentStatus").value,
+    notes:document.getElementById("studentNotes").value.trim()
+  };
+
+  const idx=students.findIndex(s=>s.id===data.id);
+  if(idx>=0) students[idx]=data; else students.push(data);
+  persist();
+  resetStudentForm();
+  renderStudents();
+  populateStudentSelects();
+}
+
+function editStudent(id){
+  const s=studentById(id); if(!s)return;
+  document.getElementById("studentId").value=s.id;
+  document.getElementById("studentName").value=s.name||"";
+  document.getElementById("studentDni").value=s.dni||"";
+  document.getElementById("studentPhone").value=s.phone||"";
+  document.getElementById("studentBirth").value=s.birth||"";
+  document.getElementById("studentJoin").value=s.join||"";
+  document.getElementById("studentPlan").value=s.plan||"Musculación";
+  document.getElementById("studentFee").value=s.fee||0;
+  document.getElementById("studentStatus").value=s.status||"ACTIVO";
+  document.getElementById("studentNotes").value=s.notes||"";
+  window.scrollTo({top:140,behavior:"smooth"});
+}
+
+function deleteStudent(id){
+  const s=studentById(id);
+  if(!s || !confirm(`Eliminar a ${s.name}? También se eliminarán sus pagos y rutinas.`))return;
+  students=students.filter(x=>x.id!==id);
+  payments=payments.filter(x=>x.studentId!==id);
+  routines=routines.filter(x=>x.studentId!==id);
+  persist(); renderStudents(); populateStudentSelects(); renderPayments(); renderRoutines(); renderSummary();
+}
+
+function resetStudentForm(){
+  document.getElementById("studentId").value="";
+  ["studentName","studentDni","studentPhone","studentBirth","studentFee","studentNotes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("studentJoin").value=todayISO();
+  document.getElementById("studentPlan").value="Musculación";
+  document.getElementById("studentStatus").value="ACTIVO";
+}
+
+function renderStudents(){
+  const q=(document.getElementById("studentSearch")?.value||"").toLowerCase();
+  const status=document.getElementById("studentStatusFilter")?.value||"TODOS";
+  const rows=students
+    .filter(s=>status==="TODOS"||s.status===status)
+    .filter(s=>[s.name,s.dni,s.phone,s.plan].join(" ").toLowerCase().includes(q))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  document.getElementById("studentsBody").innerHTML = rows.length ? rows.map(s=>`
+    <tr>
+      <td><b>${esc(s.name)}</b></td>
+      <td>${esc(s.dni||"-")}</td>
+      <td>${esc(s.phone||"-")}</td>
+      <td>${esc(s.plan||"-")}</td>
+      <td>${money(s.fee)}</td>
+      <td>${fmtDate(s.join)}</td>
+      <td>${studentStatusBadge(s.status)}</td>
+      <td>
+        <button class="btn secondary small" onclick="editStudent('${s.id}')">EDITAR</button>
+        <button class="btn danger small" onclick="deleteStudent('${s.id}')">ELIMINAR</button>
+      </td>
+    </tr>`).join("") : `<tr><td colspan="8"><div class="empty">Todavía no hay alumnos cargados.</div></td></tr>`;
+}
+
+function studentStatusBadge(st){
+  const cls=st==="ACTIVO"?"good":st==="PAUSADO"?"warn":"bad";
+  return `<span class="badge ${cls}">${esc(st)}</span>`;
+}
+
+/* ===================== PAGOS ===================== */
+function populateStudentSelects(){
+  const opts = students
+    .filter(s=>s.status!=="BAJA")
+    .sort((a,b)=>a.name.localeCompare(b.name))
+    .map(s=>`<option value="${s.id}">${esc(s.name)} - ${esc(s.plan)}</option>`).join("");
+
+  ["paymentStudent","routineStudent"].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    const current=el.value;
+    el.innerHTML=`<option value="">Seleccionar alumno</option>${opts}`;
+    if(students.some(s=>s.id===current))el.value=current;
+  });
+}
+
+function savePayment(){
+  const studentId=document.getElementById("paymentStudent").value;
+  const month=document.getElementById("paymentMonth").value;
+  const date=document.getElementById("paymentDate").value||todayISO();
+  const amount=Number(document.getElementById("paymentAmount").value||0);
+  if(!studentId){alert("Seleccioná un alumno.");return;}
+  if(!month){alert("Seleccioná el mes correspondiente.");return;}
+  if(amount<=0){alert("Ingresá un monto válido.");return;}
+
+  payments.push({
+    id:uid("pay"), studentId, month, date, amount,
+    method:document.getElementById("paymentMethod").value,
+    note:document.getElementById("paymentNote").value.trim()
+  });
+  persist(); resetPaymentForm(); renderPayments(); renderPaymentMetrics(); renderSummary();
+}
+
+function resetPaymentForm(){
+  document.getElementById("paymentStudent").value="";
+  document.getElementById("paymentMonth").value=monthISO();
+  document.getElementById("paymentDate").value=todayISO();
+  document.getElementById("paymentAmount").value="";
+  document.getElementById("paymentMethod").value="Efectivo";
+  document.getElementById("paymentNote").value="";
+}
+
+function deletePayment(id){
+  if(!confirm("¿Eliminar este pago?"))return;
+  payments=payments.filter(p=>p.id!==id);
+  persist(); renderPayments(); renderPaymentMetrics(); renderSummary();
+}
+
+function renderPayments(){
+  const q=(document.getElementById("paymentSearch")?.value||"").toLowerCase();
+  const month=document.getElementById("paymentFilterMonth")?.value||"";
+  const rows=payments
+    .filter(p=>!month||p.month===month)
+    .filter(p=>{
+      const s=studentById(p.studentId);
+      return (s?.name||"").toLowerCase().includes(q);
+    })
+    .sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+
+  document.getElementById("paymentsBody").innerHTML = rows.length ? rows.map(p=>{
+    const s=studentById(p.studentId);
+    return `<tr>
+      <td><b>${esc(s?.name||"Alumno eliminado")}</b></td>
+      <td>${esc(p.month)}</td>
+      <td>${fmtDate(p.date)}</td>
+      <td>${money(p.amount)}</td>
+      <td>${esc(p.method)}</td>
+      <td>${esc(p.note||"-")}</td>
+      <td><button class="btn danger small" onclick="deletePayment('${p.id}')">ELIMINAR</button></td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="7"><div class="empty">No hay pagos para mostrar.</div></td></tr>`;
+}
+
+function renderPaymentMetrics(){
+  const month=document.getElementById("paymentFilterMonth")?.value||monthISO();
+  const active=students.filter(s=>s.status==="ACTIVO");
+  const monthPayments=payments.filter(p=>p.month===month);
+  const paidIds=new Set(monthPayments.map(p=>p.studentId));
+  const paid=monthPayments.reduce((a,p)=>a+Number(p.amount||0),0);
+  const pending=active.filter(s=>!paidIds.has(s.id));
+  const debt=pending.reduce((a,s)=>a+Number(s.fee||0),0);
+
+  document.getElementById("metricPaid").textContent=money(paid);
+  document.getElementById("metricUpToDate").textContent=active.filter(s=>paidIds.has(s.id)).length;
+  document.getElementById("metricPending").textContent=pending.length;
+  document.getElementById("metricDebt").textContent=money(debt);
+}
+
+/* ===================== RUTINAS ===================== */
+function addExerciseRow(data={}){
+  const wrap=document.getElementById("exerciseRows");
+  const row=document.createElement("div");
+  row.className="exercise-row";
+  row.innerHTML=`
+    <label class="wide">Ejercicio
+      <input class="ex-name" type="text" value="${esc(data.name||"")}" placeholder="Ej: Sentadilla">
+    </label>
+    <label>Series
+      <input class="ex-series" type="number" min="1" value="${esc(data.series||"3")}">
+    </label>
+    <label>Reps
+      <input class="ex-reps" type="text" value="${esc(data.reps||"10")}">
+    </label>
+    <label>Peso (kg)
+      <input class="ex-weight" type="number" min="0" step="0.5" value="${esc(data.weight||"")}" placeholder="Ej: 40">
+    </label>
+    <button class="btn danger small" type="button" onclick="this.parentElement.remove()">X</button>`;
+  wrap.appendChild(row);
+}
+
+function getExercises(){
+  return Array.from(document.querySelectorAll("#exerciseRows .exercise-row"))
+    .map(r=>({
+      name:r.querySelector(".ex-name").value.trim(),
+      series:r.querySelector(".ex-series").value.trim(),
+      reps:r.querySelector(".ex-reps").value.trim(),
+      weight:r.querySelector(".ex-weight").value.trim()
+    }))
+    .filter(x=>x.name);
+}
+
+function saveRoutine(){
+  const id=document.getElementById("routineId").value;
+  const studentId=document.getElementById("routineStudent").value;
+  const exercises=getExercises();
+  if(!studentId){alert("Seleccioná un alumno.");return;}
+  if(!exercises.length){alert("Agregá al menos un ejercicio.");return;}
+
+  const data={
+    id:id||uid("rut"),
+    studentId,
+    goal:document.getElementById("routineGoal").value,
+    days:Number(document.getElementById("routineDays").value||3),
+    start:document.getElementById("routineStart").value||todayISO(),
+    weeks:Number(document.getElementById("routineWeeks").value||4),
+    exercises,
+    notes:document.getElementById("routineNotes").value.trim()
+  };
+  const idx=routines.findIndex(r=>r.id===data.id);
+  if(idx>=0)routines[idx]=data;else routines.push(data);
+  persist(); resetRoutineForm(); renderRoutines(); renderSummary();
+}
+
+function editRoutine(id){
+  const r=routines.find(x=>x.id===id); if(!r)return;
+  document.getElementById("routineId").value=r.id;
+  document.getElementById("routineStudent").value=r.studentId;
+  document.getElementById("routineGoal").value=r.goal;
+  document.getElementById("routineDays").value=String(r.days);
+  document.getElementById("routineStart").value=r.start;
+  document.getElementById("routineWeeks").value=r.weeks;
+  document.getElementById("routineNotes").value=r.notes||"";
+  document.getElementById("exerciseRows").innerHTML="";
+  (r.exercises||[]).forEach(addExerciseRow);
+  window.scrollTo({top:140,behavior:"smooth"});
+}
+
+function deleteRoutine(id){
+  if(!confirm("¿Eliminar esta rutina?"))return;
+  routines=routines.filter(r=>r.id!==id);
+  persist(); renderRoutines(); renderSummary();
+}
+
+function resetRoutineForm(){
+  document.getElementById("routineId").value="";
+  document.getElementById("routineStudent").value="";
+  document.getElementById("routineGoal").value="Hipertrofia";
+  document.getElementById("routineDays").value="3";
+  document.getElementById("routineStart").value=todayISO();
+  document.getElementById("routineWeeks").value=4;
+  document.getElementById("routineNotes").value="";
+  document.getElementById("exerciseRows").innerHTML="";
+  addExerciseRow();
+}
+
+function renderRoutines(){
+  const q=(document.getElementById("routineSearch")?.value||"").toLowerCase();
+  const goal=document.getElementById("routineGoalFilter")?.value||"TODOS";
+  const rows=routines
+    .filter(r=>goal==="TODOS"||r.goal===goal)
+    .filter(r=>(studentById(r.studentId)?.name||"").toLowerCase().includes(q))
+    .sort((a,b)=>(b.start||"").localeCompare(a.start||""));
+
+  const wrap=document.getElementById("routineCards");
+  wrap.innerHTML=rows.length?rows.map(r=>{
+    const s=studentById(r.studentId);
+    return `<div class="routine-card">
+      <h4>${esc(s?.name||"Alumno eliminado")}</h4>
+      <div class="meta">${esc(r.goal)} · ${r.days} días/semana · ${r.weeks} semanas · Inicio ${fmtDate(r.start)}</div>
+      <ul>${(r.exercises||[]).map(e=>`<li><b>${esc(e.name)}</b>: ${esc(e.series)} x ${esc(e.reps)} · peso ${esc(e.weight||"-")} kg</li>`).join("")}</ul>
+      ${r.notes?`<div class="status" style="margin-top:9px">${esc(r.notes)}</div>`:""}
+      <div class="actions">
+        <button class="btn secondary small" onclick="editRoutine('${r.id}')">EDITAR</button>
+        <button class="btn danger small" onclick="deleteRoutine('${r.id}')">ELIMINAR</button>
+      </div>
+    </div>`;
+  }).join(""):`<div class="empty" style="grid-column:1/-1">Todavía no hay rutinas cargadas.</div>`;
+}
+
+/* ===================== RESUMEN ===================== */
+function renderSummary(){
+  const month=document.getElementById("summaryMonth")?.value||monthISO();
+  const active=students.filter(s=>s.status==="ACTIVO");
+  const monthPayments=payments.filter(p=>p.month===month);
+  const paidIds=new Set(monthPayments.map(p=>p.studentId));
+  const income=monthPayments.reduce((a,p)=>a+Number(p.amount||0),0);
+  const pending=active.filter(s=>!paidIds.has(s.id));
+  const newStudents=students.filter(s=>(s.join||"").slice(0,7)===month);
+
+  document.getElementById("sumActive").textContent=active.length;
+  document.getElementById("sumIncome").textContent=money(income);
+  document.getElementById("sumPending").textContent=pending.length;
+  document.getElementById("sumNew").textContent=newStudents.length;
+
+  const rows=students
+    .filter(s=>s.status!=="BAJA")
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  document.getElementById("summaryBody").innerHTML=rows.length?rows.map(s=>{
+    const pp=monthPayments.filter(p=>p.studentId===s.id);
+    const paid=pp.length>0;
+    const amount=pp.reduce((a,p)=>a+Number(p.amount||0),0);
+    const lastRoutine=routines.filter(r=>r.studentId===s.id).sort((a,b)=>(b.start||"").localeCompare(a.start||""))[0];
+    return `<tr>
+      <td><b>${esc(s.name)}</b></td>
+      <td>${esc(s.plan)}</td>
+      <td>${money(s.fee)}</td>
+      <td>${studentStatusBadge(s.status)}</td>
+      <td>${paid?'<span class="badge good">PAGADO</span>':'<span class="badge bad">PENDIENTE</span>'}</td>
+      <td>${money(amount)}</td>
+      <td>${lastRoutine?`${esc(lastRoutine.goal)} - ${fmtDate(lastRoutine.start)}`:"-"}</td>
+    </tr>`;
+  }).join(""):`<tr><td colspan="7"><div class="empty">Sin datos para mostrar.</div></td></tr>`;
+
+  renderSummaryCharts(active,paidIds);
+}
+
+function renderSummaryCharts(active,paidIds){
+  if(!window.Chart)return;
+  if(charts.payments)charts.payments.destroy();
+  if(charts.plans)charts.plans.destroy();
+
+  const c1=document.getElementById("chartPayments");
+  charts.payments=new Chart(c1,{
+    type:"doughnut",
+    data:{
+      labels:["Al día","Pendientes"],
+      datasets:[{data:[
+        active.filter(s=>paidIds.has(s.id)).length,
+        active.filter(s=>!paidIds.has(s.id)).length
+      ]}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:"#fff"}}}
+    }
+  });
+
+  const planMap={};
+  active.forEach(s=>planMap[s.plan]=(planMap[s.plan]||0)+1);
+  const c2=document.getElementById("chartPlans");
+  charts.plans=new Chart(c2,{
+    type:"bar",
+    data:{
+      labels:Object.keys(planMap),
+      datasets:[{label:"Alumnos",data:Object.values(planMap)}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:"#fff"}}},
+      scales:{
+        x:{ticks:{color:"#fff"},grid:{color:"rgba(255,255,255,.07)"}},
+        y:{beginAtZero:true,ticks:{color:"#fff",precision:0},grid:{color:"rgba(255,255,255,.07)"}}
+      }
+    }
+  });
+}
+
+/* ===================== EXPORTACIONES ===================== */
+function downloadCSV(filename, rows){
+  const csv=rows.map(r=>r.map(x=>`"${String(x??"").replace(/"/g,'""')}"`).join(";")).join("\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
+}
+function exportStudentsCSV(){
+  downloadCSV("mtpro_gym_alumnos.csv",[
+    ["NOMBRE","DNI","TELEFONO","NACIMIENTO","INGRESO","PLAN","CUOTA","ESTADO","OBSERVACIONES"],
+    ...students.map(s=>[s.name,s.dni,s.phone,s.birth,s.join,s.plan,s.fee,s.status,s.notes])
+  ]);
+}
+function exportPaymentsCSV(){
+  downloadCSV("mtpro_gym_pagos.csv",[
+    ["ALUMNO","MES","FECHA","MONTO","MEDIO","OBSERVACION"],
+    ...payments.map(p=>[studentById(p.studentId)?.name||"",p.month,p.date,p.amount,p.method,p.note])
+  ]);
+}
+
+/* ===================== INICIO ===================== */
+document.addEventListener("DOMContentLoaded",()=>{
+  document.getElementById("studentJoin").value=todayISO();
+  document.getElementById("paymentMonth").value=monthISO();
+  document.getElementById("paymentFilterMonth").value=monthISO();
+  document.getElementById("paymentDate").value=todayISO();
+  document.getElementById("routineStart").value=todayISO();
+  document.getElementById("summaryMonth").value=monthISO();
+
+  renderStudents();
+  populateStudentSelects();
+  resetRoutineForm();
+  renderPayments();
+  renderPaymentMetrics();
+  renderRoutines();
+  renderSummary();
+
+  let saved="alumnos";
+  try{saved=localStorage.getItem("mtpro_gym_view")||"alumnos"}catch(e){}
+  if(["alumnos","pagos","rutinas","resumen"].includes(saved))showView(saved);
+});
+</script>
+</body>
+</html>
