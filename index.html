@@ -1640,7 +1640,7 @@ main{
 
 <section class="mt-scout-panel" id="mtLineupAdvisor" style="margin-top:20px;padding:18px">
  <h2 class="section-title">QUINTETOS RECOMENDADOS SEGÚN EL RIVAL</h2>
- <p class="status">Seleccioná tu equipo y el rival. Las recomendaciones se calculan con estadísticas de los partidos importados; podés incorporar datos oficiales mediante CSV. No se atribuyen datos a la web oficial sin verificarlos.</p>
+ <p class="status">Seleccioná tu equipo y el rival: el rival se sincroniza con Prioridad Defensiva y Plan Defensivo. Las recomendaciones se calculan con estadísticas de los partidos importados; podés incorporar datos oficiales mediante CSV. No se atribuyen datos a la web oficial sin verificarlos.</p>
  <div class="mt-scout-controls">
   <label>Mi equipo<select id="mtLineupOwn" onchange="mtLineupRender()"><option value="">Seleccionar equipo</option></select></label>
   <label>Rival<select id="mtLineupOpponent" onchange="mtLineupRender()"><option value="">Seleccionar rival</option></select></label>
@@ -5455,7 +5455,7 @@ renderComparePlayer = function(slot){
   window.mtPopulateScoutTeams = function(){
     const sel = document.getElementById("mtScoutTeam");
     if(!sel) return;
-    const current = sel.value;
+    const current = sel.value || document.getElementById("mtLineupOpponent")?.value || "";
     const playerSource = (typeof allPlayers !== "undefined" && Array.isArray(allPlayers)) ? allPlayers : [];
     const teams = [...new Set(playerSource.map(p=>p.team).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
     sel.innerHTML = '<option value="">Seleccionar rival</option>';
@@ -5651,17 +5651,17 @@ renderComparePlayer = function(slot){
 
     const {team,rows,games}=scoutRows();
     if(!team){
-      info.textContent="Cargá partidos y seleccioná un rival.";
+      info.textContent="Seleccioná un rival. Si ya lo elegiste en Quintetos Recomendados, verificá que tenga partidos PDF cargados.";
       sumEl.innerHTML="";
       rankEl.className="mt-scout-empty"; rankEl.innerHTML="Todavía no hay un rival seleccionado.";
       planEl.className="mt-scout-empty"; planEl.innerHTML="El informe se genera automáticamente con los datos cargados.";
       return;
     }
     if(!rows.length || !games.length){
-      info.innerHTML=`No hay partidos disponibles de <b>${esc(team)}</b> con esos filtros.`;
+      info.innerHTML=`Rival seleccionado: <b>${esc(team)}</b>. No se encontraron estadísticas de partidos PDF con los filtros actuales.`;
       sumEl.innerHTML="";
-      rankEl.className="mt-scout-empty"; rankEl.innerHTML="Sin datos para este filtro.";
-      planEl.className="mt-scout-empty"; planEl.innerHTML="Probá TODOS o cargá más partidos del rival.";
+      rankEl.className="mt-scout-empty"; rankEl.innerHTML="Rival identificado, pero sin estadísticas de partidos para generar prioridades defensivas.";
+      planEl.className="mt-scout-empty"; planEl.innerHTML="Seleccioná condición TODOS o cargá PDF del rival. El CSV de nombres y posiciones no incluye estadísticas para calcular este plan.";
       return;
     }
 
@@ -6464,6 +6464,18 @@ function setOptions(el,teams,placeholder){const v=el.value;el.innerHTML='<option
 window.mtLineupRender=function(){const all=data(),teams=[...new Set(all.map(x=>x.team))].sort((a,b)=>a.localeCompare(b));const own=$('mtLineupOwn'),opp=$('mtLineupOpponent');if(!own||!opp)return;
  setOptions(own,teams,'Seleccionar mi equipo');setOptions(opp,teams,'Seleccionar rival');
  const scout=$('mtScoutTeam')?.value;if(!opp.value&&teams.includes(scout))opp.value=scout;
+ // Sincronizar el rival del asesor con el informe principal, sin recursión.
+ const mainScout=$('mtScoutTeam');
+ if(mainScout && opp.value && mainScout.value!==opp.value){
+   if([...mainScout.options].some(o=>o.value===opp.value)){
+     mainScout.value=opp.value;
+     if(typeof window.mtRenderScouting==='function' && !window.__mtSyncingScout){
+       window.__mtSyncingScout=true;
+       try{window.mtRenderScouting()}finally{window.__mtSyncingScout=false}
+       return;
+     }
+   }
+ }
  const mine=all.filter(x=>x.team===own.value),theirs=all.filter(x=>x.team===opp.value);
  $('mtLineupSource').textContent='Datos: '+official.length+' registros CSV de nombres/posiciones; '+all.filter(x=>x.source==='PDF importados').length+' jugadores de partidos cargados. El CSV es aportado por el usuario, no sincronizado automáticamente. Las posiciones y la disponibilidad deben validarse antes del partido.';
  if(!own.value||!opp.value){$('mtLineupResults').innerHTML='<p class="status">Seleccioná ambos equipos para calcular las propuestas.</p>';$('mtLineupRivalPlayers').innerHTML='';return}
@@ -6478,6 +6490,15 @@ window.mtLineupCalculate=function(){const all=data(),mine=all.filter(x=>x.team==
 };
 const previous=window.mtRenderScouting;
 if(typeof previous==='function')window.mtRenderScouting=function(){previous.apply(this,arguments);window.mtLineupRender()};
+document.addEventListener('change',function(e){
+ if(e.target?.id==='mtScoutTeam'){
+   const opponent=$('mtLineupOpponent');
+   if(opponent && [...opponent.options].some(o=>o.value===e.target.value)){
+     opponent.value=e.target.value;
+     window.mtLineupRender();
+   }
+ }
+});
 window.addEventListener('load',()=>setTimeout(window.mtLineupRender,300));
 })();
 </script>
