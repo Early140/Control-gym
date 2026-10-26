@@ -1646,7 +1646,7 @@ main{
   <label>Rival<select id="mtLineupOpponent" onchange="mtLineupRender()"><option value="">Seleccionar rival</option></select></label>
   <label>Fuente de estadísticas oficiales (CSV)<input id="mtLineupCsv" type="file" accept=".csv,text/csv" onchange="mtLineupImport(event)"></label>
  </div>
- <p class="status">CSV: columnas equipo, jugador, posicion, pj, pts, reb, ast, rob, tap, per, t3_pct, t3_int, t2_pct, t2_int (promedios por partido). <a href="https://www.laliganacional.com.ar/laliga/" target="_blank" rel="noopener">Consultar Liga Nacional</a>. Si la web no permite acceso automatizado, exportá o transcribí estadísticas verificadas al CSV.</p>
+ <p class="status">CSV: columnas equipo, jugador y posicion. Se reconoce por apellido e inicial aunque el PDF tenga el nombre completo. SIN EQUIPO se usa solo para asociar posiciones, no como equipo. Las estadísticas son opcionales. <a href="https://www.laliganacional.com.ar/laliga/" target="_blank" rel="noopener">Consultar Liga Nacional</a>. Si la web no permite acceso automatizado, exportá o transcribí estadísticas verificadas al CSV.</p>
  <div id="mtLineupSource" class="status"></div>
  <div id="mtLineupRivalPlayers"></div>
  <div id="mtLineupResults"></div>
@@ -6404,6 +6404,19 @@ const $=id=>document.getElementById(id);
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=x=>Number(String(x??0).replace(',','.'))||0;
 const norm=s=>String(s||'').trim().toLowerCase();
+// Vinculación conservadora: apellido + inicial, sin tildes ni puntuación.
+const cleanName=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z\s]/g,' ').replace(/\s+/g,' ').trim();
+function nameParts(value){
+ const original=String(value||'').trim();const tokens=cleanName(original).split(' ').filter(Boolean);
+ if(!tokens.length)return {surname:'',initial:''};
+ if(original.includes(',')){const parts=original.split(',');return {surname:cleanName(parts[0]),initial:cleanName(parts.slice(1).join(' ')).charAt(0)}}
+ // CSV "APELLIDO A." (también acepta "APELLIDO A")
+ if(tokens.length===2&&tokens[1].length===1)return {surname:tokens[0],initial:tokens[1]};
+ // PDF: "Franco Balbi" -> BALBI + F
+ return {surname:tokens[tokens.length-1],initial:tokens[0].charAt(0)};
+}
+function nameMatch(a,b){const x=nameParts(a),y=nameParts(b);return !!x.surname&&x.surname===y.surname&&(!x.initial||!y.initial||x.initial===y.initial)}
+
 let official=[];
 try{official=JSON.parse(localStorage.getItem('mt_lineup_official_v1')||'[]')}catch(e){}
 function csvRows(text){
@@ -6415,15 +6428,24 @@ function csvRows(text){
 }
 window.mtLineupImport=async function(ev){const file=ev.target.files?.[0];if(!file)return;try{
  const data=csvRows(await file.text());if(!data.length||!data.every(x=>x.equipo&&x.jugador))throw Error('El CSV necesita columnas equipo y jugador.');
- official=data.map(x=>({team:x.equipo,player:x.jugador,pos:x.posicion||'',gp:num(x.pj)||1,ppg:num(x.pts),rpg:num(x.reb),apg:num(x.ast),spg:num(x.rob),bpg:num(x.tap),topg:num(x.per),t3pct:num(x.t3_pct),t3aPg:num(x.t3_int),t2pct:num(x.t2_pct),t2aPg:num(x.t2_int),source:'CSV externo'}));
+ official=data.map(x=>({team:x.equipo,player:x.jugador,pos:x.posicion||'',gp:num(x.pj)||1,ppg:num(x.pts),rpg:num(x.reb),apg:num(x.ast),spg:num(x.rob),bpg:num(x.tap),topg:num(x.per),t3pct:num(x.t3_pct),t3aPg:num(x.t3_int),t2pct:num(x.t2_pct),t2aPg:num(x.t2_int),source:'CSV externo',hasStats:['pts','reb','ast','rob','tap','per','t3_pct','t3_int','t2_pct','t2_int'].some(k=>String(x[k]||'').trim()!=='')}));
  localStorage.setItem('mt_lineup_official_v1',JSON.stringify(official));window.mtLineupRender();
  }catch(e){alert('No se pudo importar el CSV: '+e.message)}};
 function data(){const raw=typeof allPlayers!=='undefined'&&Array.isArray(allPlayers)?allPlayers:[];const teams=[...new Set(raw.map(x=>x.team).filter(Boolean))];
  const grouped=new Map();for(const r of raw){const key=r.team+'|'+r.player;if(!r.team||!r.player)continue;let x=grouped.get(key);if(!x){x={team:r.team,player:r.player,pos:'',gp:0,ppg:0,rpg:0,apg:0,spg:0,bpg:0,topg:0,t3pct:0,t3aPg:0,t2pct:0,t2aPg:0,t3m:0,t3a:0,t2m:0,t2a:0,games:new Set(),source:'PDF importados'};grouped.set(key,x)}
  const id=r.gameId||r.sourceFile||r.source||key;if(x.games.has(id))continue;x.games.add(id);x.gp++;x.ppg+=num(r.pts);x.rpg+=num(r.reb)||num(r.rd)+num(r.ro);x.apg+=num(r.ast);x.spg+=num(r.rec);x.bpg+=num(r.tapTC);x.topg+=num(r.per);x.t3m+=num(r.t3m);x.t3a+=num(r.t3a);x.t2m+=num(r.t2m);x.t2a+=num(r.t2a)}
  const out=[...grouped.values()].map(x=>{for(const k of ['ppg','rpg','apg','spg','bpg','topg'])x[k]/=Math.max(1,x.gp);x.t3pct=x.t3a?100*x.t3m/x.t3a:0;x.t2pct=x.t2a?100*x.t2m/x.t2a:0;x.t3aPg=x.t3a/Math.max(1,x.gp);x.t2aPg=x.t2a/Math.max(1,x.gp);return x});
- // CSV data takes precedence for the same player/team, avoiding double counting.
- for(const x of official){const idx=out.findIndex(y=>norm(y.team)===norm(x.team)&&norm(y.player)===norm(x.player));if(idx>=0)out.splice(idx,1);out.push(x)}return out;
+ // CSV sin equipo: se usa como catálogo de posiciones, nunca como un equipo ficticio.
+ // Si existen varias coincidencias por apellido e inicial, no se asigna automáticamente.
+ for(const x of official){
+  const candidates=out.filter(y=>nameMatch(y.player,x.player)&&(!x.team||norm(x.team)==='sin equipo'||norm(x.team)===norm(y.team)));
+  if(candidates.length===1){
+   const target=candidates[0];if(x.pos)target.pos=x.pos;
+   // Los CSV con estadísticas reales pueden actualizar los promedios.
+   if(x.hasStats&&norm(x.team)!=='sin equipo')Object.assign(target,{ppg:x.ppg,rpg:x.rpg,apg:x.apg,spg:x.spg,bpg:x.bpg,topg:x.topg,t3pct:x.t3pct,t3aPg:x.t3aPg,t2pct:x.t2pct,t2aPg:x.t2aPg,source:'CSV externo'});
+  }else if(candidates.length===0&&x.hasStats&&x.team&&norm(x.team)!=='sin equipo')out.push(x);
+ }
+ return out;
 }
 function score(p,mode,rival){const t3=p.t3pct*Math.min(1,p.t3aPg/3)/10;const inside=p.t2pct*Math.min(1,p.t2aPg/5)/10;
  const offense=p.ppg*.8+p.apg*1.5+inside*.8+t3*.8-p.topg*.8;
@@ -6443,7 +6465,7 @@ window.mtLineupRender=function(){const all=data(),teams=[...new Set(all.map(x=>x
  setOptions(own,teams,'Seleccionar mi equipo');setOptions(opp,teams,'Seleccionar rival');
  const scout=$('mtScoutTeam')?.value;if(!opp.value&&teams.includes(scout))opp.value=scout;
  const mine=all.filter(x=>x.team===own.value),theirs=all.filter(x=>x.team===opp.value);
- $('mtLineupSource').textContent='Datos: '+official.length+' registros CSV externos; '+all.filter(x=>x.source==='PDF importados').length+' jugadores de partidos cargados. El CSV es aportado por el usuario, no sincronizado automáticamente. Las posiciones y la disponibilidad deben validarse antes del partido.';
+ $('mtLineupSource').textContent='Datos: '+official.length+' registros CSV de nombres/posiciones; '+all.filter(x=>x.source==='PDF importados').length+' jugadores de partidos cargados. El CSV es aportado por el usuario, no sincronizado automáticamente. Las posiciones y la disponibilidad deben validarse antes del partido.';
  if(!own.value||!opp.value){$('mtLineupResults').innerHTML='<p class="status">Seleccioná ambos equipos para calcular las propuestas.</p>';$('mtLineupRivalPlayers').innerHTML='';return}
  if(own.value===opp.value){$('mtLineupResults').innerHTML='<p class="status">Elegí equipos diferentes.</p>';return}
  $('mtLineupRivalPlayers').innerHTML='<h3>Jugadores rivales a considerar</h3><p class="status">Desmarcá a los que no jugarán o no quieras incluir en el análisis.</p>'+theirs.map((p,i)=>'<label style="display:inline-flex;gap:6px;margin:5px 12px 5px 0"><input type="checkbox" class="mt-rival-check" data-index="'+i+'" checked onchange="mtLineupCalculate()">'+safe(p.player)+'</label>').join('');
